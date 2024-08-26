@@ -1,0 +1,19 @@
+name: BanHammer
+version: '1.0'
+main: org.nakolotnik.banhammer
+api-version: '1.20'
+
+commands:
+  banhammer:
+    description: Give the BanHammer
+    usage: /banhammer
+
+
+permissions:
+  banhammer.use:
+    description: Allows using the BanHammer
+    default: op
+
+  banhammer.give:
+    description: Allows giving the BanHammer
+    default: op
