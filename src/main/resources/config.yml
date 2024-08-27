@@ -1,0 +1,22 @@
+banmace:
+  mode: SPAWN
+  toggle_key: RIGHT_CLICK_AIR
+  teleport_effect:
+    particle: PORTAL
+    count: 100
+    speed: 0.2
+    offset: 0.5
+  teleport_sound: ENTITY_ENDERMAN_TELEPORT
+  messages:
+    player_teleported_spawn: "§a%player% был телепортирован на спавн!"
+    player_teleported_bed: "§a%player% был телепортирован к своей кровати!"
+    player_no_bed_teleported_spawn: "§c%player% не имеет кровати, был телепортирован на спавн!"
+    mace_received: "§aВы получили булову бана!"
+    no_permission: "§cУ вас нет прав на использование этой команды!"
+    freeze: "§c%player% заморожен на %time% секунд!"
+    ban: "§c%player% был временно забанен!"
+    kick: "§c%player% был кикнут с сервера!"
+  banmace_modes:
+    ban_duration: 600
+    freeze_duration: 10
+

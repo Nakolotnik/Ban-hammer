@@ -1,19 +1,20 @@
-name: BanHammer
+name: BanMace
 version: '1.0'
-main: org.nakolotnik.banhammer
+main: org.nakolotnik.banMace.BanMace
 api-version: '1.20'
 
-commands:
-  banhammer:
-    description: Give the BanHammer
-    usage: /banhammer
 
+commands:
+  banmace:
+    description: Give a BanMace to the player.
+    usage: /<command> give
+    aliases: [bh]
 
 permissions:
-  banhammer.use:
-    description: Allows using the BanHammer
+  banmace.use:
+    description: Allows the player to use the BanMace.
+    default: true
+  banmace.give:
+    description: Allows the player to receive the BanMace.
     default: op
 
-  banhammer.give:
-    description: Allows giving the BanHammer
-    default: op
