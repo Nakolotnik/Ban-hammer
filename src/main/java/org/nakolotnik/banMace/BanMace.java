@@ -3,57 +3,122 @@ package org.nakolotnik.banMace;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.util.*;
 
 public final class BanMace extends JavaPlugin implements Listener {
     private static final Material HAMMER_MATERIAL = Material.NETHERITE_AXE;
     private static final String HAMMER_NAME = "§cBan Mace";
     private ItemStack exampleHammer;
-
-    private enum Mode { SPAWN, BED, BAN, KICK, FREEZE }
+    private String currentLanguage;
+    private FileConfiguration messages;
+    private YamlConfiguration locale;
+    private enum Mode { SPAWN, BED, BAN, KICK}
     private Mode currentMode = Mode.SPAWN;
     private String toggleKey;
-
     private final Map<UUID, Integer> hammerUsageStats = new HashMap<>();
+    private static final NamespacedKey MODE_KEY = new NamespacedKey("banmace", "mode");
+
+    private String getMessage(String key) {
+        String message = messages.getString(key, "Message not found: " + key);
+        if (message.startsWith("Message not found:")) {
+            getLogger().warning("Missing message for key: " + key);
+        }
+        return message;
+    }
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        getLogger().info("Загружены сообщения: " + getConfig().getString("banmace.messages.mace_received"));
+        loadLocale();
+        currentLanguage = getConfig().getString("banmace.language", "en");
+        loadMessages(currentLanguage);
+        getLogger().info(getMessage("mace_received")); // Пример использования локализации
         currentMode = Mode.valueOf(getConfig().getString("banmace.mode", "SPAWN"));
         toggleKey = getConfig().getString("banmace.toggle_key", "RIGHT_CLICK_BLOCK");
         getServer().getPluginManager().registerEvents(this, this);
         createExampleHammer();
+
         if (this.getCommand("banmace") != null) {
             Objects.requireNonNull(this.getCommand("banmace")).setExecutor(this);
             Objects.requireNonNull(this.getCommand("banmace")).setTabCompleter(this);
         } else {
-            getLogger().severe("Команда /banmace не была найдена. Проверьте plugin.yml!");
+            getLogger().severe(getMessage("command_not_found"));
         }
+
+        if (this.getCommand("setlanguage") != null) {
+            Objects.requireNonNull(this.getCommand("setlanguage")).setExecutor(this);
+            Objects.requireNonNull(this.getCommand("setlanguage")).setTabCompleter(this);
+        }
+    }
+
+    private void loadLocale() {
+        String language = getConfig().getString("banmace.language", "en");
+        loadMessages(language);
+        File localeFile = new File(getDataFolder(), "messages_" + language + ".yml");
+        if (!localeFile.exists()) {
+            saveResource("messages_" + language + ".yml", false);
+        }
+        locale = YamlConfiguration.loadConfiguration(localeFile);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("setlanguage")) {
+            if (args.length == 1) {
+                return Arrays.asList("en", "ru");
+            }
+        }
+        return null;
     }
 
 
     @Override
     public void onDisable() {
+        getConfig().set("banmace.language", currentLanguage);
         getConfig().set("banmace.mode", currentMode.name());
         getConfig().set("banmace.toggle_key", toggleKey);
         saveConfig();
     }
+
+
+    private void updateLore(ItemMeta meta, Mode mode) {
+        String modeName = meta.getPersistentDataContainer().get(MODE_KEY, PersistentDataType.STRING);
+        Mode effectiveMode = modeName != null ? Mode.valueOf(modeName) : Mode.SPAWN;
+
+        String lore = switch (effectiveMode) {
+            case SPAWN -> getMessage("mode_spawn");
+            case BED -> getMessage("mode_bed");
+            case BAN -> getMessage("mode_ban");
+            case KICK -> getMessage("mode_kick");
+        };
+        meta.setLore(Collections.singletonList(lore));
+    }
+
+
 
     private void createExampleHammer() {
         exampleHammer = createHammer(currentMode);
@@ -63,26 +128,28 @@ public final class BanMace extends JavaPlugin implements Listener {
         ItemStack hammer = new ItemStack(HAMMER_MATERIAL);
         ItemMeta meta = hammer.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(HAMMER_NAME);
+            String displayName = HAMMER_NAME + " (" + mode.name() + ")";
+            meta.setDisplayName(displayName);
             updateLore(meta, mode);
+
+            int customModelData = getConfig().getInt("item_customization.modes." + mode.name().toLowerCase(), 0);
+            meta.setCustomModelData(customModelData);
+
             meta.addEnchant(Enchantment.KNOCKBACK, 10, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+            container.set(MODE_KEY, PersistentDataType.STRING, mode.name());
+
             hammer.setItemMeta(meta);
         }
         return hammer;
     }
 
-    private void updateLore(ItemMeta meta, Mode mode) {
-        String lore = switch (mode) {
-            case SPAWN -> "§7Телепортирует игрока на точку спавна";
-            case BED -> "§7Телепортирует игрока к его кровати (или на спавн)";
-            case BAN -> "§7Временно банит игрока";
-            case KICK -> "§7Кикает игрока с сервера";
-            case FREEZE -> "§7Замораживает игрока на месте";
-            default -> "§7Неизвестный режим";
-        };
-        meta.setLore(Collections.singletonList(lore));
-    }
+
+
+
+
 
     @EventHandler
     public void onPlayerHit(EntityDamageByEntityEvent event) {
@@ -106,9 +173,6 @@ public final class BanMace extends JavaPlugin implements Listener {
                     case KICK:
                         handleKick(damager, target);
                         break;
-                    case FREEZE:
-                        handleFreeze(damager, target);
-                        break;
                 }
             }
         }
@@ -119,28 +183,33 @@ public final class BanMace extends JavaPlugin implements Listener {
             @Override
             public void run() {
                 playTeleportEffects(target);
-                World world = target.getWorld();
                 Location teleportLocation;
-                if (world.getEnvironment() == World.Environment.NORMAL) {
-                    teleportLocation = world.getSpawnLocation();
-                } else {
-                    World mainWorld = Bukkit.getWorlds().stream()
-                            .filter(w -> w.getEnvironment() == World.Environment.NORMAL)
-                            .findFirst()
-                            .orElse(null);
+                boolean noBedMessageSent = false;
 
-                    if (mainWorld != null) {
-                        target.teleport(mainWorld.getSpawnLocation());
-                        damager.sendMessage(getMessage("player_teleported_spawn").replace("%player%", target.getName()));
+                if (currentMode == Mode.BED) {
+                    Location bedLocation = target.getBedSpawnLocation();
+                    if (bedLocation != null) {
+                        teleportLocation = bedLocation;
                     } else {
-                        damager.sendMessage("§cОсновной мир не найден. Невозможно телепортировать игрока.");
+                        teleportLocation = target.getWorld().getSpawnLocation();
+                        damager.sendMessage(getMessage("player_no_bed_teleported_spawn").replace("%player%", target.getName()));
+                        noBedMessageSent = true;
                     }
-                    return;
+                } else {
+                    teleportLocation = target.getWorld().getSpawnLocation();
                 }
-
+                if (target.getWorld().getEnvironment() != World.Environment.NORMAL) {
+                    World overworld = Bukkit.getWorlds().get(0);
+                    if (overworld != null) {
+                        teleportLocation = teleportLocation.clone();
+                        teleportLocation.setWorld(overworld);
+                    }
+                }
                 target.teleport(teleportLocation);
-                damager.sendMessage(getMessage("player_teleported_spawn").replace("%player%", target.getName()));
-                target.sendMessage(getMessage("player_teleported_spawn").replace("%player%", target.getName()));
+                if (!noBedMessageSent) {
+                    damager.sendMessage(getMessage("player_teleported_spawn").replace("%player%", target.getName()));
+                    target.sendMessage(getMessage("player_teleported_spawn").replace("%player%", target.getName()));
+                }
                 playTeleportEffects(target);
             }
         }.runTaskLater(this, 1L);
@@ -157,43 +226,7 @@ public final class BanMace extends JavaPlugin implements Listener {
         target.kickPlayer(getMessage("kick").replace("%player%", target.getName()));
     }
 
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        if (frozenPlayers.contains(player.getUniqueId())) {
-            // Проверка на изменение координат по Y (прыжок)
-            if (event.getFrom().getY() < event.getTo().getY()) {
-                // Блокируем движение вверх
-                event.setTo(event.getFrom());
-            }
-        }
-    }
-    private final Set<UUID> frozenPlayers = new HashSet<>();
 
-    private void handleFreeze(Player damager, Player target) {
-        int freezeDuration = getConfig().getInt("banmace_modes.freeze_duration", 10);
-        target.sendMessage(getMessage("freeze").replace("%player%", target.getName()).replace("%time%", String.valueOf(freezeDuration)));
-
-        // Добавляем игрока в список замороженных
-        frozenPlayers.add(target.getUniqueId());
-
-        // Устанавливаем скорость передвижения в 0
-        target.setWalkSpeed(0);
-        target.setFlySpeed(0);
-
-        // Отменяем заморозку через заданное время
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Восстанавливаем скорости передвижения
-                target.setWalkSpeed(0.2f);
-                target.setFlySpeed(0.1f);
-
-                // Убираем игрока из списка замороженных
-                frozenPlayers.remove(target.getUniqueId());
-            }
-        }.runTaskLater(this, freezeDuration * 20L);
-    }
 
     private void playTeleportEffects(Player target) {
         Particle particle = Particle.valueOf(getConfig().getString("teleport_effect.particle", "PORTAL"));
@@ -208,51 +241,157 @@ public final class BanMace extends JavaPlugin implements Listener {
 
     private void logHammerUsage(Player damager, Player target) {
         hammerUsageStats.put(damager.getUniqueId(), hammerUsageStats.getOrDefault(damager.getUniqueId(), 0) + 1);
-        getLogger().info(damager.getName() + " использовал ban mace на " + target.getName() + " в режиме " + currentMode);
+        getLogger().info(getMessage("hammer_used")
+                .replace("%damager%", damager.getName())
+                .replace("%target%", target.getName())
+                .replace("%mode%", currentMode.name()));
     }
-
-    private String getMessage(String key) {
-        String message = getConfig().getString("banmace.messages." + key, "Сообщение не найдено: " + key);
-        if (message.startsWith("Сообщение не найдено:")) {
-            getLogger().warning("Отсутствует сообщение для ключа: " + key);
-        }
-        return message;
-    }
-
-
 
     private boolean isBanMace(ItemStack item) {
-        return item != null && item.getType() == HAMMER_MATERIAL && HAMMER_NAME.equals(item.getItemMeta().getDisplayName());
+        if (item == null || item.getType() != HAMMER_MATERIAL) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        String displayName = meta.getDisplayName();
+        if (!HAMMER_NAME.equals(displayName.split(" \\(")[0])) {
+            return false;
+        }
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        return container.has(MODE_KEY, PersistentDataType.STRING);
     }
 
+
+    private void cycleMode(Player player) {
+        currentMode = Mode.values()[(currentMode.ordinal() + 1) % Mode.values().length];
+        updateHammerInInventory(player);
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (itemInHand != null && itemInHand.getType() == HAMMER_MATERIAL) {
+            ItemMeta meta = itemInHand.getItemMeta();
+            if (meta != null) {
+                updateLore(meta, currentMode);
+                String displayName = HAMMER_NAME + " (" + currentMode.name() + ")";
+                meta.setDisplayName(displayName);
+
+                // Update the mode in PersistentDataContainer
+                PersistentDataContainer container = meta.getPersistentDataContainer();
+                container.set(MODE_KEY, PersistentDataType.STRING, currentMode.name());
+
+                int customModelData = getConfig().getInt("item_customization.modes." + currentMode.name().toLowerCase(), 0);
+                meta.setCustomModelData(customModelData);
+
+                itemInHand.setItemMeta(meta);
+                player.getInventory().setItemInMainHand(itemInHand);
+            }
+        }
+        player.sendMessage(getMessage("mode_switched").replace("%mode%", currentMode.name()));
+
+        playCustomEffects(player, "mode_switch");
+    }
+
+
+    private Inventory createModeSelectionGUI() {
+        Inventory gui = Bukkit.createInventory(null, 9, "Select Mode");
+
+        for (Mode mode : Mode.values()) {
+            ItemStack item = new ItemStack(Material.NETHERITE_AXE);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§c" + mode.name());
+                meta.setLore(Collections.singletonList(getMessage("mode_" + mode.name().toLowerCase())));
+                item.setItemMeta(meta);
+            }
+            gui.addItem(item);
+        }
+
+        return gui;
+    }
+
+    private void playCustomEffects(Player player, String effectType) {
+        Particle particle;
+        Sound sound;
+
+        switch (effectType) {
+            case "mode_switch":
+                particle = Particle.valueOf(getConfig().getString("item_customization.additional_effects.mode_switch_particle", "SPELL_WITCH"));
+                sound = Sound.valueOf(getConfig().getString("item_customization.additional_effects.mode_switch_sound", "BLOCK_NOTE_BLOCK_PLING"));
+                break;
+            default:
+                return;
+        }
+
+        int count = 50;
+        double offset = 0.5;
+        float speed = 0.1f;
+
+        player.getWorld().spawnParticle(particle, player.getLocation(), count, offset, offset, offset, speed);
+
+        player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
+    }
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Action action;
+
         try {
             action = Action.valueOf(toggleKey);
         } catch (IllegalArgumentException e) {
-            getLogger().severe("Неизвестное действие для toggle_key в конфигурации: " + toggleKey);
+            getLogger().severe(getMessage("unknown_toggle_action").replace("%toggleKey%", toggleKey));
             return;
         }
 
-        if (event.getAction() == action) {
+        if (event.getHand() == EquipmentSlot.HAND && event.getAction() == action) {
             if (isBanMace(player.getInventory().getItemInMainHand())) {
                 cycleMode(player);
             }
         }
     }
 
+    private void updateHammerInInventory(Player player) {
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (isBanMace(itemInHand)) {
+            ItemMeta meta = itemInHand.getItemMeta();
+            if (meta != null) {
+                updateLore(meta, currentMode);
+                String displayName = HAMMER_NAME + " (" + currentMode.name() + ")";
+                meta.setDisplayName(displayName);
 
-    private void cycleMode(Player player) {
-        currentMode = Mode.values()[(currentMode.ordinal() + 1) % Mode.values().length];
-        ItemMeta meta = exampleHammer.getItemMeta();
-        if (meta != null) {
-            updateLore(meta, currentMode);
-            exampleHammer.setItemMeta(meta);
+                int customModelData = getConfig().getInt("item_customization.modes." + currentMode.name().toLowerCase(), 0);
+                meta.setCustomModelData(customModelData);
+
+                itemInHand.setItemMeta(meta);
+                player.getInventory().setItemInMainHand(itemInHand);
+            }
         }
-        player.sendMessage("§aБулова бана теперь в режиме: §c" + currentMode);
     }
+
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals("Select Mode")) {
+            event.setCancelled(true);
+
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || !clickedItem.hasItemMeta()) {
+                return;
+            }
+
+            Player player = (Player) event.getWhoClicked();
+            String modeName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+            try {
+                Mode selectedMode = Mode.valueOf(modeName);
+                currentMode = selectedMode;
+                updateHammerInInventory(player);
+                player.sendMessage(getMessage("mode_switched").replace("%mode%", currentMode.name()));
+                player.closeInventory();
+            } catch (IllegalArgumentException e) {
+                player.sendMessage("§cInvalid mode selected!");
+            }
+        }
+    }
+
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -266,8 +405,51 @@ public final class BanMace extends JavaPlugin implements Listener {
             }
             return true;
         }
+        if (command.getName().equalsIgnoreCase("selectmode") && sender instanceof Player) {
+            Player player = (Player) sender;
+            Inventory modeSelectionGUI = createModeSelectionGUI();
+            player.openInventory(modeSelectionGUI);
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("setlanguage")) {
+            if (!(sender instanceof Player) || sender.hasPermission("banmace.setlanguage")) {
+                if (args.length == 1) {
+                    String language = args[0].toLowerCase();
+                    if (language.equals("en") || language.equals("ru")) {
+                        loadMessages(language);
+                        sender.sendMessage(getMessage("language_set").replace("%language%", language));
+                    } else {
+                        sender.sendMessage(getMessage("invalid_language"));
+                    }
+                } else {
+                    sender.sendMessage(getMessage("language_usage"));
+                }
+            } else {
+                sender.sendMessage(getMessage("no_permission"));
+            }
+            return true;
+        }
+
         return false;
     }
+
+
+    private void loadMessages(String language) {
+        String fileName = "messages_" + language + ".yml";
+        File languageFile = new File(getDataFolder(), fileName);
+
+        if (!languageFile.exists()) {
+            saveResource(fileName, false);
+        }
+
+        messages = YamlConfiguration.loadConfiguration(languageFile);
+        currentLanguage = language;
+        getLogger().info("Loaded language: " + language);
+    }
+
+
+
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
         Player player = event.getPlayer();
@@ -275,7 +457,7 @@ public final class BanMace extends JavaPlugin implements Listener {
         if (isBanMace(item) && !player.hasPermission("banmace.give")) {
             event.setCancelled(true);
             event.getItem().remove();
-            player.sendMessage("§cВы не имеете права на использование этого предмета и он был удален.");
+            player.sendMessage(getMessage("item_removed_no_permission"));
         }
     }
 }
