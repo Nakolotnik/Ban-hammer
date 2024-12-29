@@ -1,21 +1,23 @@
-banmace:
-  language: en
-  mode: SPAWN
-  toggle_key: RIGHT_CLICK_AIR
-  teleport_effect:
-    particle: PORTAL
-    count: 100
-    speed: 0.2
-    offset: 0.5
-  teleport_sound: ENTITY_ENDERMAN_TELEPORT
-  banmace_modes:
-    ban_duration: 600
-    freeze_duration: 10
-  item_customization:
-    name_color: '&c'
-    lore:
-      - '&7This is the ultimate punishment tool.'
-      - '&7Use it wisely.'
-    additional_effects:
-      mode_switch_sound: BLOCK_NOTE_BLOCK_PLING
-      mode_switch_particle: SPELL_WITCH
+language: en
+teleport_effect:
+  particle: PORTAL
+  count: 100
+  speed: 0.2
+  offset: 0.5
+teleport_sound: ENTITY_ENDERMAN_TELEPORT
+whitelist:
+  enabled: true
+  players:
+message_display_mode: "chat" # Prob values: chat, actionbar, title
+check_for_updates: true
+
+item_customization:
+  name_color: '§c'
+  bm-name: 'Ban Hammer 40k'
+  lore:
+    - 'This is the ultimate punishment tool.'
+    - 'Use it wisely.'
+
+additional_effects:
+  mode_switch_sound: BLOCK_NOTE_BLOCK_PLING
+  mode_switch_particle: SPELL_WITCH

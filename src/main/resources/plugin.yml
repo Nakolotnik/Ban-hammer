@@ -1,58 +1,32 @@
 name: BanMace
-version: '1.0.5'
+version: '1.5'
 main: org.nakolotnik.banMace.BanMace
 api-version: '1.20'
 
 commands:
-  banmace:
-    description: Give a BanMace to the player.
-    usage: /<command> give
-    aliases: [bh]
-    permission: banmace.give
-    permission-message: "You don't have permission to use this command."
-  setlanguage:
-    description: "Sets the plugin language."
-    usage: "/setlanguage [en|ru]"
-    permission: banmace.setlanguage
-    permission-message: "You don't have permission to use this command."
-  selectmode:
-    description: "Opens the GUI to select the mode for BanMace."
-    usage: "/selectmode"
-    aliases: [sm]
-    permission: banmace.selectmode
-    permission-message: "You don't have permission to use this command."
+  bm-setlanguage:
+    description: Change the plugin language.
+    usage: /bm-setlanguage [en|ru]
+    permission: banmace.bm-setlanguage
+  bm-give:
+    description: Give the Ban Mace to a player.
+    usage: /banmace bm-give
+    permission: banmace.bm-give
+  bm-changeview:
+    description: Change the message display mode.
+    usage: /bm-changeview <chat|actionbar|title>
+    permission: banmace.bm-changeview
+    permission-message: You do not have permission to use this command.
+
 permissions:
-  banmace.use:
-    description: Allows the player to use the BanMace.
-    default: true
-  banmace.give:
-    description: Allows the player to receive the BanMace.
-    default: op
-  banmace.setlanguage:
-    description: Allows the player to set the language.
-    default: op
-  banmace.selectmode:
-    description: Allows the player to open the mode selection GUI.
+  banmace.bm-setlanguage:
+    description: Allows changing the plugin language.
     default: op
 
-banmace:
-  language: en
-  mode: SPAWN
-  toggle_key: RIGHT_CLICK_AIR
-  teleport_effect:
-    particle: PORTAL
-    count: 100
-    speed: 0.2
-    offset: 0.5
-  teleport_sound: ENTITY_ENDERMAN_TELEPORT
-  banmace_modes:
-    ban_duration: 600
-    freeze_duration: 10
-  item_customization:
-    name_color: '&c'
-    lore:
-      - '&7This is the ultimate punishment tool.'
-      - '&7Use it wisely.'
-    additional_effects:
-      mode_switch_sound: BLOCK_NOTE_BLOCK_PLING
-      mode_switch_particle: SPELL_WITCH
+  banmace.give:
+    description: Allows giving the Ban Mace to a player.
+    default: op
+
+  banmace.bm-changeview:
+    description: Allows changing the message display mode (chat, actionbar, title).
+    default: op
