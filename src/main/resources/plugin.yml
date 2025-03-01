@@ -1,5 +1,5 @@
 name: BanMace
-version: '1.5'
+version: '1.6'
 main: org.nakolotnik.banMace.BanMace
 api-version: '1.20'
 
@@ -17,6 +17,16 @@ commands:
     usage: /bm-changeview <chat|actionbar|title>
     permission: banmace.bm-changeview
     permission-message: You do not have permission to use this command.
+  bm-tpcoordinates:
+    description: Teleport the player to specified coordinates.
+    usage: /bm-tpcoordinates <x> <y> <z>
+    permission: banmace.tpcoordinates
+    permission-message: You do not have permission to use this command.
+  bm-help:
+    description: Show a list of available BanMace commands.
+    usage: /bm-help
+    permission: banmace.bm-help
+    permission-message: You do not have permission to use this command.
 
 permissions:
   banmace.bm-setlanguage:
@@ -29,4 +39,16 @@ permissions:
 
   banmace.bm-changeview:
     description: Allows changing the message display mode (chat, actionbar, title).
+    default: op
+
+  banmace.tpcoordinates:
+    description: Allows the player to use the teleport-to-coordinates command.
+    default: op
+
+  banmace.bm-help:
+    description: Allows a player to view the list of available commands for BanMace.
+    default: op
+
+  banmace.update.notify:
+    description: Allows receiving update notifications for BanMace.
     default: op

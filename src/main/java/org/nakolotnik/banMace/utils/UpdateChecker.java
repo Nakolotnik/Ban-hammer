@@ -1,6 +1,10 @@
 package org.nakolotnik.banMace.utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.nakolotnik.banMace.BanMace;
 
 import java.io.BufferedReader;
@@ -8,12 +12,18 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class UpdateChecker {
+public class UpdateChecker implements Listener {
     private static final String MODRINTH_API_URL = "https://api.modrinth.com/v2/project/ban-mace/version";
     private final BanMace plugin;
+    private String latestVersion;
+    private boolean updateAvailable = false;
+    private String updateMessage;
+    private boolean alreadyLogged = false; // Флаг, предотвращающий двойное логирование
 
     public UpdateChecker(BanMace plugin) {
         this.plugin = plugin;
+        Bukkit.getPluginManager().registerEvents(this, plugin); // Регистрируем обработчик событий
+        checkForUpdates(); // Проверка обновлений при запуске
     }
 
     public void checkForUpdates() {
@@ -26,18 +36,23 @@ public class UpdateChecker {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder response = new StringBuilder();
                 String line;
-
                 while ((line = reader.readLine()) != null) {
                     response.append(line);
                 }
-
                 reader.close();
                 connection.disconnect();
 
-                String latestVersion = parseLatestVersion(response.toString());
+                latestVersion = parseLatestVersion(response.toString());
                 if (latestVersion != null && isNewerVersion(latestVersion)) {
-                    plugin.getLogger().warning("A new version of BanMace is available: " + latestVersion +
-                            ". Download it here: https://modrinth.com/plugin/ban-mace");
+                    updateAvailable = true;
+                    updateMessage = "§6[BanMace] A new version is available: " + latestVersion +
+                            ". Download it here: https://modrinth.com/plugin/ban-mace";
+
+                    // Логируем в консоль только один раз
+                    if (!alreadyLogged) {
+                        plugin.getLogger().warning(updateMessage);
+                        alreadyLogged = true; // Устанавливаем флаг, чтобы больше не логировать
+                    }
                 } else {
                     plugin.getLogger().info("You are using the latest version of BanMace.");
                 }
@@ -64,5 +79,24 @@ public class UpdateChecker {
     private boolean isNewerVersion(String latestVersion) {
         String currentVersion = plugin.getDescription().getVersion();
         return latestVersion.compareTo(currentVersion) > 0;
+    }
+
+    /**
+     * Уведомляет админов при входе в игру, если есть обновление.
+     */
+    @EventHandler
+    public void onAdminJoin(PlayerJoinEvent event) {
+        if (!updateAvailable || !plugin.getConfig().getBoolean("update_notify_in_game", true)) {
+            return; // Если обновления нет или отключено уведомление, выходим
+        }
+
+        Player player = event.getPlayer();
+        if (player.isOp() || player.hasPermission("banmace.update.notify")) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (player.isOnline()) { // Проверяем, что игрок всё ещё в игре
+                    player.sendMessage(updateMessage);
+                }
+            }, 40L); // Задержка 2 секунды (40 тиков), чтобы не терялось среди других сообщений
+        }
     }
 }

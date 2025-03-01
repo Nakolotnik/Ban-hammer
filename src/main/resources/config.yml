@@ -5,11 +5,16 @@ teleport_effect:
   speed: 0.2
   offset: 0.5
 teleport_sound: ENTITY_ENDERMAN_TELEPORT
+
 whitelist:
   enabled: true
   players:
+
+
 message_display_mode: "chat" # Prob values: chat, actionbar, title
+
 check_for_updates: true
+update_notify_in_game: true
 
 item_customization:
   name_color: '§c'
@@ -21,3 +26,9 @@ item_customization:
 additional_effects:
   mode_switch_sound: BLOCK_NOTE_BLOCK_PLING
   mode_switch_particle: SPELL_WITCH
+
+ban_mode:
+  default_duration: "2h"
+
+active_mode: SPAWN
+

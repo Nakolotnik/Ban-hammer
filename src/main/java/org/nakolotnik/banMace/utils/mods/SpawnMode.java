@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.nakolotnik.banMace.BanMace;
 import org.nakolotnik.banMace.ModeHandler;
+import org.bukkit.Sound;
 
 import java.util.Map;
 

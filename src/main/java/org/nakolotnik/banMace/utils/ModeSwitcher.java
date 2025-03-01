@@ -30,7 +30,7 @@ public class ModeSwitcher implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (item != null && item.getType() == Material.NETHERITE_AXE && item.getItemMeta() != null) {
+        if (item != null && item.getType() == Material.MACE && item.getItemMeta() != null) {
             var meta = item.getItemMeta();
 
             String baseName = BanMace.getInstance().getConfig().getString("item_customization.bm-name", "Ban Mace");
@@ -84,11 +84,9 @@ public class ModeSwitcher implements Listener {
     }
 
     private void playSwitchEffects(Player player) {
-        // Получение конфигурации эффектов
         String soundName = BanMace.getInstance().getConfig().getString("additional_effects.mode_switch_sound", "BLOCK_NOTE_BLOCK_PLING");
         String particleName = BanMace.getInstance().getConfig().getString("additional_effects.mode_switch_particle", "SPELL_WITCH");
 
-        // Воспроизведение звука
         try {
             Sound sound = Sound.valueOf(soundName.toUpperCase());
             player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
@@ -96,7 +94,6 @@ public class ModeSwitcher implements Listener {
             BanMace.getInstance().getLogger().warning("Invalid sound: " + soundName);
         }
 
-        // Создание частиц
         try {
             Particle particle = Particle.valueOf(particleName.toUpperCase());
             player.getWorld().spawnParticle(particle, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);

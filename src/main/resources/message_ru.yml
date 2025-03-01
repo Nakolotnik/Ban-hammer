@@ -22,3 +22,15 @@ messages:
   teleported_to_spawn: "§aВы были телепортированы на спавн."
   bed_teleport: "§aВы были телепортированы к своей кровати."
   teleported_to_bed: "§aВы телепортировали %player% к его кровати."
+  ban_applied: "§c%player% был забанен на %duration%."
+  banned_message: "§aВы были забанены на %duration%."
+  ban_reason: "Забанен через булову бана"
+  teleported_to_coordinates: "§aТелепортирован на координаты: X=%x%, Y=%y%, Z=%z%."
+  command_help: |
+    §a------ BanMace Помощь ------
+    §e/bm-give §7- Получить Булову.
+    §e/bm-setlanguage <язык> §7- Изменить язык плагина (например: en, ru, de, ua)
+    §e/bm-changeview <chat|actionbar|title> §7- Изменить режим отображения сообщений.
+    §e/bm-tpcoordinates <x> <y> <z> §7- Установить координаты в Булове и телепортировать цель.
+    §e/bm-help §7- Показать это сообщение помощи.
+

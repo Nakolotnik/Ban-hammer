@@ -6,6 +6,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -23,27 +24,42 @@ public final class BanMace extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        setMode(new SpawnMode());
-
         instance = this;
         saveDefaultConfig();
 
+        // Инициализация менеджера языков
         languageManager = new LanguageManager(this);
         languageManager.checkAndLoadLanguageFiles();
         languageManager.loadMessages(getConfig().getString("language", "en"));
 
-        getServer().getPluginManager().registerEvents(new SpawnMode(), this);
-        getServer().getPluginManager().registerEvents(new BedMode(), this);
-        getServer().getPluginManager().registerEvents(new BanMode(), this);
-        getServer().getPluginManager().registerEvents(new KickMode(), this);
-        getServer().getPluginManager().registerEvents(new ModeSwitcher(), this);
-        getServer().getPluginManager().registerEvents(new ItemPickupListener(this), this);
-        getServer().getPluginManager().registerEvents(new FreezeMode(), this);
+        String lastActiveMode = getConfig().getString("active_mode", "SPAWN");
+        try {
+            BanMaceMode initialMode = BanMaceMode.valueOf(lastActiveMode);
+            setMode(initialMode.getHandler());
+        } catch (IllegalArgumentException e) {
+            getLogger().warning("Invalid mode in config: " + lastActiveMode + ". Defaulting to SPAWN mode.");
+            setMode(new SpawnMode());
+        }
+
+        Listener[] listeners = new Listener[] {
+                new SpawnMode(),
+                new BedMode(),
+                new BanMode(),
+                new KickMode(),
+                new ModeSwitcher(),
+                new ItemPickupListener(this),
+                new FreezeMode(),
+                new TeleportToMode()
+        };
+        for (Listener listener : listeners) {
+            getServer().getPluginManager().registerEvents(listener, this);
+        }
 
         CommandHandler commandHandler = new CommandHandler(this);
-        Objects.requireNonNull(getCommand("bm-give")).setExecutor(commandHandler);
-        Objects.requireNonNull(getCommand("bm-setlanguage")).setExecutor(commandHandler);
-        Objects.requireNonNull(getCommand("bm-changeview")).setExecutor(commandHandler);
+        String[] commands = {"bm-give", "bm-setlanguage", "bm-changeview", "bm-tpcoordinates", "bm-help"};
+        for (String cmd : commands) {
+            Objects.requireNonNull(getCommand(cmd)).setExecutor(commandHandler);
+        }
 
         if (getConfig().getBoolean("check_for_updates", true)) {
             getLogger().info("Checking for updates...");
@@ -53,9 +69,25 @@ public final class BanMace extends JavaPlugin {
         }
     }
 
+
+
     public static void setMode(ModeHandler mode) {
         currentMode = mode;
+
+        BanMaceMode selectedMode = null;
+        for (BanMaceMode banMaceMode : BanMaceMode.values()) {
+            if (banMaceMode.getHandler().getClass().equals(mode.getClass())) {
+                selectedMode = banMaceMode;
+                break;
+            }
+        }
+
+        if (selectedMode != null) {
+            BanMace.getInstance().getConfig().set("active_mode", selectedMode.name());
+            BanMace.getInstance().saveConfig();
+        }
     }
+
 
     public static ModeHandler getCurrentMode() {
         return currentMode;
@@ -87,7 +119,7 @@ public final class BanMace extends JavaPlugin {
         String name = getConfig().getString("item_customization.bm-name", "Ban Mace");
         List<String> lore = getConfig().getStringList("item_customization.lore");
 
-        ItemStack mace = new ItemStack(Material.NETHERITE_AXE);
+        ItemStack mace = new ItemStack(Material.MACE);
         var meta = mace.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(nameColor + name);
@@ -120,7 +152,8 @@ public final class BanMace extends JavaPlugin {
         BED(new BedMode()),
         BAN(new BanMode()),
         KICK(new KickMode()),
-        FREEZE(new FreezeMode());
+        FREEZE(new FreezeMode()),
+        TELEPORT(new TeleportToMode());
 
         private final ModeHandler handler;
 
@@ -132,6 +165,7 @@ public final class BanMace extends JavaPlugin {
             return handler;
         }
     }
+
     public void playTeleportEffects(Player target) {
         Particle particle = Particle.valueOf(getConfig().getString("teleport_effect.particle", "PORTAL"));
         int count = getConfig().getInt("teleport_effect.count", 100);
@@ -159,11 +193,10 @@ public final class BanMace extends JavaPlugin {
                 break;
         }
     }
-
     public static boolean isHoldingBanMace(Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (item == null || item.getType() != Material.NETHERITE_AXE || !item.hasItemMeta()) {
+        if (item == null || item.getType() != Material.MACE || !item.hasItemMeta()) {
             return false;
         }
 
@@ -174,5 +207,4 @@ public final class BanMace extends JavaPlugin {
 
         return "unique_ban_mace".equals(container.get(maceKey, PersistentDataType.STRING));
     }
-
 }

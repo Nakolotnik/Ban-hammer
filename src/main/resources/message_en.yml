@@ -22,3 +22,14 @@ messages:
   teleported_to_spawn: "§aYou have been teleported to spawn."
   bed_teleport: "§aYou have been teleported to your bed."
   teleported_to_bed: "§aYou teleported %player% to their bed."
+  ban_applied: "§c%player% has been banned for %duration%."
+  banned_message: "§aYou have been banned for %duration%."
+  ban_reason: "Banned by Ban Mace"
+  teleported_to_coordinates: "§aTeleported to coordinates: X=%x%, Y=%y%, Z=%z%."
+  command_help: |
+    §a------ BanMace Help ------
+    §e/bm-give §7- Obtain the Ban Mace item.
+    §e/bm-setlanguage <language> §7- Change the plugin language. (e.g., en, ru, de, ua)
+    §e/bm-changeview <chat|actionbar|title> §7- Change message display mode.
+    §e/bm-tpcoordinates <x> <y> <z> §7- Set coordinates in Ban Mace and teleport target.
+    §e/bm-help §7- Show this help message.
