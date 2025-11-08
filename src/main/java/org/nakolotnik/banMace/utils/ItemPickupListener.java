@@ -1,14 +1,16 @@
 package org.nakolotnik.banMace.utils;
 
 import org.bukkit.NamespacedKey;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -22,51 +24,80 @@ public class ItemPickupListener implements Listener {
         this.plugin = plugin;
     }
 
-    // Проверка при подборе предмета с земли
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
         ItemStack item = event.getItem().getItemStack();
-        if (item == null || !item.hasItemMeta()) {
+        if (!isBanMace(item)) {
             return;
         }
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "ban_mace");
 
-        if (dataContainer.has(key, PersistentDataType.STRING)
-                && "unique_ban_mace".equals(dataContainer.get(key, PersistentDataType.STRING))) {
-            Player player = event.getPlayer();
-            if (!canInteract(player)) {
-                event.setCancelled(true);
-                event.getItem().remove(); // Удаляем предмет с земли
-                player.sendMessage(plugin.getMessage("item_removed_no_permission"));
-            }
+        Player player = event.getPlayer();
+        if (!canInteract(player)) {
+            event.setCancelled(true);
+            event.getItem().remove();
+            player.sendMessage(plugin.getMessage("item_removed_no_permission"));
         }
     }
 
-    // Проверка при взаимодействии с предметом (например, щелчок правой/левой кнопкой)
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
-        if (item == null || !item.hasItemMeta()) {
+
+        if (!isBanMace(item)) {
             return;
         }
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "ban_mace");
 
-        if (dataContainer.has(key, PersistentDataType.STRING)
-                && "unique_ban_mace".equals(dataContainer.get(key, PersistentDataType.STRING))) {
+        if (!canInteract(player)) {
+            event.setCancelled(true);
+            player.getInventory().remove(item);
+            player.sendMessage(plugin.getMessage("item_removed_no_permission"));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerSwapHands(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        ItemStack mainHand = event.getMainHandItem();
+        ItemStack offHand = event.getOffHandItem();
+
+        if (isBanMace(mainHand) || isBanMace(offHand)) {
             if (!canInteract(player)) {
-                // Удаляем предмет из инвентаря
-                player.getInventory().remove(item);
+                event.setCancelled(true);
+                if (isBanMace(mainHand)) {
+                    player.getInventory().remove(mainHand);
+                }
+                if (isBanMace(offHand)) {
+                    player.getInventory().remove(offHand);
+                }
                 player.sendMessage(plugin.getMessage("item_removed_no_permission"));
             }
         }
     }
 
-    // Проверка при входе игрока – если в инвентаре есть булава, а прав нет, она удаляется.
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+
+        ItemStack clickedItem = event.getCurrentItem();
+        ItemStack cursorItem = event.getCursor();
+
+        if (isBanMace(clickedItem) || isBanMace(cursorItem)) {
+            if (!canInteract(player)) {
+                event.setCancelled(true);
+                if (isBanMace(clickedItem)) {
+                    event.setCurrentItem(null);
+                }
+                if (isBanMace(cursorItem)) {
+                    event.setCursor(null);
+                }
+                player.sendMessage(plugin.getMessage("item_removed_no_permission"));
+            }
+        }
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -75,31 +106,36 @@ public class ItemPickupListener implements Listener {
         }
     }
 
-    // Проверка при ударе (например, если игрок пытается использовать булаву в бою)
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player) {
-            Player damager = (Player) event.getDamager();
-            ItemStack item = damager.getInventory().getItemInMainHand();
-            if (item == null || !item.hasItemMeta()) {
-                return;
-            }
-            ItemMeta meta = item.getItemMeta();
-            PersistentDataContainer container = meta.getPersistentDataContainer();
-            NamespacedKey key = new NamespacedKey(plugin, "ban_mace");
+        if (!(event.getDamager() instanceof Player damager)) {
+            return;
+        }
 
-            if (container.has(key, PersistentDataType.STRING)
-                    && "unique_ban_mace".equals(container.get(key, PersistentDataType.STRING))) {
-                if (!canInteract(damager)) {
-                    // Удаляем предмет из инвентаря
-                    damager.getInventory().remove(item);
-                    damager.sendMessage(plugin.getMessage("item_removed_no_permission"));
-                }
-            }
+        ItemStack item = damager.getInventory().getItemInMainHand();
+        if (!isBanMace(item)) {
+            return;
+        }
+
+        if (!canInteract(damager)) {
+            event.setCancelled(true);
+            damager.getInventory().remove(item);
+            damager.sendMessage(plugin.getMessage("item_removed_no_permission"));
         }
     }
 
-    // Проверка, имеет ли игрок необходимые права (OP или в whitelist)
+    private boolean isBanMace(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+        NamespacedKey key = new NamespacedKey(plugin, "ban_mace");
+
+        return dataContainer.has(key, PersistentDataType.STRING)
+                && "unique_ban_mace".equals(dataContainer.get(key, PersistentDataType.STRING));
+    }
+
     private boolean canInteract(Player player) {
         if (player.isOp()) {
             return true;
@@ -110,18 +146,11 @@ public class ItemPickupListener implements Listener {
         return false;
     }
 
-    // Проходим по инвентарю игрока и удаляем все экземпляры Ban Mace
     private void removeBanMaceFromInventory(Player player) {
         for (int slot = 0; slot < player.getInventory().getSize(); slot++) {
             ItemStack item = player.getInventory().getItem(slot);
-            if (item != null && item.getType() == Material.MACE && item.hasItemMeta()) {
-                ItemMeta meta = item.getItemMeta();
-                PersistentDataContainer container = meta.getPersistentDataContainer();
-                NamespacedKey key = new NamespacedKey(plugin, "ban_mace");
-                if (container.has(key, PersistentDataType.STRING)
-                        && "unique_ban_mace".equals(container.get(key, PersistentDataType.STRING))) {
-                    player.getInventory().setItem(slot, null);
-                }
+            if (isBanMace(item)) {
+                player.getInventory().setItem(slot, null);
             }
         }
     }

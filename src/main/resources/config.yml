@@ -8,17 +8,19 @@ teleport_sound: ENTITY_ENDERMAN_TELEPORT
 
 whitelist:
   enabled: true
-  players:
+  players: tester
 
 
-message_display_mode: "chat" # Prob values: chat, actionbar, title
+message_display_mode: "chat"
 
 check_for_updates: true
 update_notify_in_game: true
 
 item_customization:
+  # https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
   name_color: '§c'
   bm-name: 'Ban Hammer 40k'
+  item_material: "MACE"
   lore:
     - 'This is the ultimate punishment tool.'
     - 'Use it wisely.'
@@ -32,3 +34,8 @@ ban_mode:
 
 active_mode: SPAWN
 
+logging:
+  file_enabled: true
+  discord:
+    enabled: true
+    webhook_url: ""

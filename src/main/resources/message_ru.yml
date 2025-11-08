@@ -1,36 +1,202 @@
 messages:
-  mode_switched: "§aРежим изменён на §c%mode%."
-  no_permission: "У вас нет прав для этого действия."
-  item_removed_no_permission: "§cВы не имеете права на использование этого предмета и он был удален."
-  mode_spawn: "СПАВН"
-  mode_bed: "КРОВАТЬ"
-  mode_ban: "БАН"
-  mode_kick: "КИК"
-  mace_given: "§aВы получили Булову!"
-  must_be_player: "Эту команду могут использовать только игроки."
-  invalid_language: "§cНеверный язык. Доступные языки: %languages%."
-  language_set: "§aЯзык был установлен на §6§l%language%."
-  language_usage: "§aИспользование: /bm-setlanguage [en|ru]"
-  invalid_usage: "§cНеверное использование. Используйте %usage%."
-  invalid_mode: "§cНеверный режим. Допустимые режимы: chat, actionbar, title."
-  view_mode_changed: "§aРежим отображения сообщений изменён на %mode%."
-  freeze_applied: "§aВы заморозили игрока %target%."
-  freeze_received: "§aВы были заморожены!"
-  tool_switched: "§aSwitched tool. Current mode: §c%mode%."
-  player_teleported_spawn: "§a%player% был телепортирован на спавн!"
-  no_bed_spawn: "§c%player% не имеет кровати. Телепортируем на спавн."
+  no_permission: "§cУ вас нет прав для этого действия."
+  must_be_player: "§cЭту команду могут использовать только игроки."
+  invalid_usage: "§cНеверное использование. Используйте: %usage%"
+  mace_given: "§aВы получили Булаву Бана!"
+  cannot_use_on_player: "§cВы не можете использовать Булаву на игроке {player}."
+  item_removed_no_permission: "§cВы не имеете права на использование этого предмета, и он был удален."
+  mode_switched: "§aРежим изменён на: §e{mode}"
+  mode_spawn: "Телепорт на спавн"
+  mode_bed: "Телепорт к кровати"
+  mode_ban: "Бан"
+  mode_kick: "Кик"
+  mode_freeze: "Заморозка"
+  mode_balloon: "Воздушные шарики"
+  mode_teleport_to: "Телепорт по координатам"
+  player_teleported_spawn: "§aИгрок {player} был телепортирован на спавн!"
   teleported_to_spawn: "§aВы были телепортированы на спавн."
+  no_bed_spawn: "§cУ игрока {player} нет кровати. Телепортация на спавн."
   bed_teleport: "§aВы были телепортированы к своей кровати."
-  teleported_to_bed: "§aВы телепортировали %player% к его кровати."
-  ban_applied: "§c%player% был забанен на %duration%."
-  banned_message: "§aВы были забанены на %duration%."
-  ban_reason: "Забанен через булову бана"
-  teleported_to_coordinates: "§aТелепортирован на координаты: X=%x%, Y=%y%, Z=%z%."
+  teleported_to_bed: "§aВы телепортировали игрока {player} к его кровати."
+  ban_applied: "§a✓ Игрок {player} был забанен на {duration}."
+  banned_message: "§cВы были забанены.\nПричина: {reason}\nДлительность: {duration}"
+  ban_reason: "Забанен администратором."
+  kick_applied: "§a✓ Игрок {player} был кикнут."
+  kick_reason: "Кикнут администратором."
+  freeze_applied: "§bВы заморозили игрока {target} на 20 секунд."
+  freeze_received: "§bВы были заморожены!"
+  balloon_applied: "§dВы запустили {target} в полет на шариках!"
+  balloon_received: "§dВы улетаете на воздушных шариках!"
+  teleported_to_coordinates: "§aТелепортирован игрок {player} на координаты: X={x}, Y={y}, Z={z}."
+  coordinates_not_set: "§cВ этой булаве не установлены координаты. Используйте /bm-tpcoordinates <x> <y> <z>."
+  invalid_coordinates: "§cКоординаты в описании этой булавы некорректны."
+  coordinates_set: "§aКоординаты (X:{x} Y:{y} Z:{z}) были установлены в вашей булаве."
+  invalid_language: "§cНеверный язык. Доступные: %languages%."
+  language_set: "§aЯзык установлен на: §e{language}."
+  language_usage: "Использование: /bm-setlanguage [en|ru]"
+  invalid_mode: "§cНеверный режим. Допустимые режимы: chat, actionbar, title."
+  view_mode_changed: "§aРежим отображения сообщений изменён на: §e{mode}."
+  not_holding_mace: "§cВы должны держать Булаву Бана в руках, чтобы установить координаты."
+  unknown_action: "§c❌ Неизвестное действие: {action}"
+  unknown_input_type: "§c❌ Неизвестный тип ввода: {type}"
+  no_languages_available: "§c❌ Нет доступных языков!"
   command_help: |
-    §a------ BanMace Помощь ------
-    §e/bm-give §7- Получить Булову.
-    §e/bm-setlanguage <язык> §7- Изменить язык плагина (например: en, ru, de, ua)
-    §e/bm-changeview <chat|actionbar|title> §7- Изменить режим отображения сообщений.
-    §e/bm-tpcoordinates <x> <y> <z> §7- Установить координаты в Булове и телепортировать цель.
+    §a------ Помощь по BanMace ------
+    §e/bm-give §7- Получить Булаву Бана.
+    §e/bm-settings §7- Открыть меню настроек.
+    §e/bm-setlanguage <язык> §7- Изменить язык плагина.
+    §e/bm-changeview <режим> §7- Изменить режим отображения сообщений.
+    §e/bm-tpcoordinates <x> <y> <z> §7- Установить координаты в булаве.
     §e/bm-help §7- Показать это сообщение помощи.
-
+  lore:
+    spawn:
+      - '§7Режим: Телепорт на спавн'
+      - '§fТелепортирует цель на точку'
+      - '§fспавна этого мира.'
+    bed:
+      - '§7Режим: Телепорт к кровати'
+      - '§fТелепортирует цель к ее'
+      - '§fличной кровати.'
+    ban:
+      - '§7Режим: Бан'
+      - '§cМоментально банит цель'
+      - '§cна сервере.'
+    kick:
+      - '§7Режим: Кик'
+      - '§6Моментально кикает цель'
+      - '§6с сервера.'
+    freeze:
+      - '§7Режим: Заморозка'
+      - '§bОбездвиживает цель на'
+      - '§bкороткое время.'
+    teleport_to:
+      - '§7Режим: Телепорт по координатам'
+      - '§dТелепортирует цель на координаты,'
+      - '§dсохраненные в булаве.'
+    balloon:
+      - '§7Режим: Воздушные шарики'
+      - '§dПривязывает шарики к цели,'
+      - '§dотправляя её в небо.'
+  gui:
+    title:
+      main: "§8▪ §6§lНастройки BanMace §8▪"
+      particle: "§8▪ §d§lВыбор Частиц §8▪"
+      sound: "§8▪ §b§lВыбор Звуков §8▪"
+      item: "§8▪ §c§lВыбор Предмета §8▪"
+      confirm: "§8▪ §e§lПодтверждение Действия §8▪"
+    status:
+      enabled: "§a✓ Включено"
+      disabled: "§c✗ Выключено"
+    webhook:
+      configured: "§a✓ Настроен"
+      not_configured: "§c❌ Не настроен"
+    main:
+      lore:
+        current: "§7Текущий: §e{value}"
+        status: "§7Статус: {status}"
+        particle: "§7Частица: §e{value}"
+        sound: "§7Звук: §e{value}"
+        webhook: "§7Вебхук: {status}"
+        click_to_cycle: "§f▶ Нажмите для переключения"
+        click_to_toggle: "§f▶ Нажмите, чтобы вкл/выкл"
+        click_to_open: "§f▶ Нажмите, чтобы открыть"
+        click_to_browse: "§f▶ Нажмите для просмотра"
+        right_click_preview: "§8ПКМ для предпросмотра"
+        click_to_configure: "§f▶ Нажмите для настройки"
+        click_to_close: "§f▶ Нажмите, чтобы закрыть"
+      language:
+        title: "§a§l⚙ Настройки Языка"
+        lore_1: "§8┌─────────────────────┐"
+        lore_available_title: "§8│ §7Доступные языки     §8│"
+        lore_languages_format: "§8│ {languages} §8│"
+        lore_4: "§8└─────────────────────┘"
+      display_mode:
+        title: "§a§l📝 Режим Отображения"
+        lore_1: "§8┌─────────────────────┐"
+        lore_2: "§8│ §7ЧАТ §8- §7Обычный чат §8│"
+        lore_3: "§8│ §7ACTIONBAR §8- §7Над хотбаром §8│"
+        lore_4: "§8│ §7TITLE §8- §7В центре экрана §8│"
+        lore_5: "§8└─────────────────────┘"
+      whitelist:
+        title: "§a§l🛡 Белый Список"
+        lore_1: "§7Если включено, только игроки"
+        lore_2: "§7из белого списка могут использовать BanMace."
+      update_checker:
+        title: "§a§l🔄 Проверка Обновлений"
+        lore_1: "§7Автоматически проверять наличие"
+        lore_2: "§7обновлений плагина при запуске."
+      mace_item:
+        title: "§c§l🔨 Предмет Булавы"
+        lore_1: "§7Выберите, какой предмет будет"
+        lore_2: "§7представлять BanMace в игре."
+      teleport_effects:
+        title: "§d§l✨ Эффекты Телепортации"
+        lore_1: "§7Визуальные эффекты, которые"
+        lore_2: "§7проигрываются при телепорте."
+      sound_effects:
+        title: "§b§l🔊 Звуковые Эффекты"
+        lore_1: "§7Звуковое сопровождение для"
+        lore_2: "§7телепортации и других действий."
+      discord_integration:
+        title: "§9§l📋 Интеграция с Discord"
+        lore_1: "§7Подключите ваш сервер к Discord"
+        lore_2: "§7для расширенного логирования."
+      discord_logging:
+        title: "§9§l📤 Логи в Discord"
+        lore_1: "§7Отправлять события банов и логи"
+        lore_2: "§7напрямую в канал Discord."
+      plugin_info:
+        title: "§e§l📊 Информация о Плагине"
+        lore_version: "§7Версия: §f{value}"
+        lore_authors: "§7Авторы: §f{value}"
+        lore_description: "§7Описание: §f{value}"
+        lore_details: "§8Статистика и детали плагина"
+      close:
+        title: "§c§l❌ Закрыть Меню"
+        lore_1: "§7Спасибо за использование BanMace!"
+    message:
+      settings_saved: "§a§l✓ §aНастройки сохранены! Спасибо за использование BanMace."
+      preview_particle: "§d✨ Предпросмотр частицы: §e{particle}"
+      preview_sound: "§b🔊 Предпросмотр звука: §e{sound}"
+      operation_cancelled: "§c❌ Операция отменена."
+      language_changed: "§a§l✓ §aЯзык изменен на: §e{language}"
+      display_mode_changed: "§a§l✓ §aРежим отображения изменен на: §e{mode}"
+      setting_toggled: "§a§l✓ §a{setting} теперь {status}"
+      webhook_not_set_warning: "§e⚠ Внимание: Логи в Discord включены, но URL вебхука не настроен!"
+      particle_set: "§a§l✓ §aЧастица для телепорта установлена на: §e{particle}"
+      sound_set: "§a§l✓ §aЗвук для телепорта установлен на: §e{sound}"
+      item_set: "§a§l✓ §aПредмет булавы изменен на: §e{item}"
+      webhook_success: "§a§l✓ §aURL Discord вебхука успешно настроен!"
+      webhook_url_display: "§7URL: §8{url}"
+      webhook_invalid_format: "§c❌ Неверный формат URL вебхука! Проверьте структуру ссылки."
+      webhook_invalid_url: "§c❌ Неверный URL вебхука!\n§7Должен начинаться с: §bhttps://discord.com/api/webhooks/\n§7Пример: §8https://discord.com/api/webhooks/123456789/abcdef..."
+      preview_failed: "§cНе удалось показать частицу: {particle}"
+      item_already_set: "§cЭтот предмет уже выбран в качестве Булавы Бана."
+      mace_updated: "§aВаша Булава Бана была обновлена до нового вида!"
+      maces_updated_globally: "§aУспешно обновлено {count} Булав Бана на сервере."
+      example_actionbar: "§e§lПример: §7Так будут выглядеть сообщения!"
+      example_title_main: "§e§lПример"
+      example_title_sub: "§7Так будут выглядеть сообщения!"
+      example_chat: "§e§lПример: §7Так будут выглядеть сообщения!"
+    prompt:
+      webhook: "§e§l✏ Настройка Discord Вебхука\n§7Пожалуйста, вставьте URL вашего вебхука в чат.\n§7Формат: §bhttps://discord.com/api/webhooks/...\n§7Напишите '§ccancel§7' для отмены операции."
+    confirm:
+      title: "§e§l⚠ Подтвердите Действие"
+      action: "§7Действие: §f{action}"
+      question: "§7Вы уверены, что хотите продолжить?"
+      warning: "§7Это действие нельзя будет отменить."
+      choose: "§aВыберите один из вариантов:"
+      button_yes_title: "§a§l✓ Да, подтвердить"
+      button_yes_lore: "§7Нажмите, чтобы выполнить: §f{action}"
+      button_no_title: "§c§l✗ Нет, отменить"
+      button_no_lore: "§7Нажмите, чтобы отменить операцию"
+    selection:
+      currently_selected: "§a§lВыбрано"
+      click_to_select: "§7ЛКМ для выбора"
+      page_prev: "§a§l◀ Пред. Страница"
+      page_next: "§a§l▶ След. Страница"
+      page_info_title: "§e§lИнформация о Странице"
+      page_info_current: "§7Текущая страница: §f{current}"
+      page_info_total: "§7Всего страниц: §f{total}"
+      page_info_items: "§7Всего элементов: §f{items}"
+      back_button: "§c§l↩ Назад в Главное Меню"

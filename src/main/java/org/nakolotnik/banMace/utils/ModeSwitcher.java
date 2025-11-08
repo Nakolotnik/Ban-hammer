@@ -1,6 +1,5 @@
 package org.nakolotnik.banMace.utils;
 
-import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -9,7 +8,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 import org.nakolotnik.banMace.BanMace;
 import org.nakolotnik.banMace.BanMace.BanMaceMode;
 
@@ -22,83 +20,56 @@ public class ModeSwitcher implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
         }
-
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
 
         Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItemInMainHand();
-
-        if (item != null && item.getType() == Material.MACE && item.getItemMeta() != null) {
-            var meta = item.getItemMeta();
-
-            String baseName = BanMace.getInstance().getConfig().getString("item_customization.bm-name", "Ban Mace");
-            String nameColor = BanMace.getInstance().getConfig().getString("item_customization.name_color", "§7");
-            String expectedNamePrefix = nameColor + baseName;
-
-            if (meta.getDisplayName() != null && meta.getDisplayName().startsWith(expectedNamePrefix)) {
-                switchMode(player);
-                updateItemDisplayName(item, BanMace.getCurrentMode().getModeName());
-                playSwitchEffects(player);
-            }
+        if (!BanMace.isHoldingBanMace(player)) {
+            return;
         }
+
+        switchMode(player);
+        playSwitchEffects(player);
     }
 
     private void switchMode(Player player) {
-        BanMaceMode currentMode = null;
+        BanMace plugin = BanMace.getInstance();
+        BanMaceMode currentModeEnum = null;
         for (BanMaceMode mode : BanMaceMode.values()) {
             if (BanMace.getCurrentMode().getClass().equals(mode.getHandler().getClass())) {
-                currentMode = mode;
+                currentModeEnum = mode;
                 break;
             }
         }
+        BanMaceMode nextModeEnum = (currentModeEnum == null)
+                ? BanMaceMode.SPAWN
+                : BanMaceMode.values()[(currentModeEnum.ordinal() + 1) % BanMaceMode.values().length];
 
-        BanMaceMode nextMode;
-        if (currentMode == null) {
-            nextMode = BanMaceMode.SPAWN;
-        } else {
-            int nextIndex = (currentMode.ordinal() + 1) % BanMaceMode.values().length;
-            nextMode = BanMaceMode.values()[nextIndex];
-        }
-
-        BanMace.setMode(nextMode.getHandler());
-
-        String message = BanMace.getInstance().getMessage("mode_switched", Map.of("mode", nextMode.name()));
-        BanMace.getInstance().displayMessage(player, message);
-    }
-
-    private void updateItemDisplayName(ItemStack item, String modeName) {
-        if (item.getItemMeta() != null) {
-            var meta = item.getItemMeta();
-
-            String nameColor = BanMace.getInstance().getConfig().getString("item_customization.name_color", "§7");
-            String baseName = BanMace.getInstance().getConfig().getString("item_customization.bm-name", "Ban Mace");
-
-            String displayName = nameColor + baseName + " (" + modeName + ")";
-
-            meta.setDisplayName(displayName);
-
-            item.setItemMeta(meta);
-        }
+        BanMace.setMode(player, nextModeEnum.getHandler());
+        String modeNameKey = "mode_" + nextModeEnum.name().toLowerCase();
+        String translatedModeName = plugin.getMessage(modeNameKey);
+        String message = plugin.getMessage("mode_switched", Map.of("mode", translatedModeName));
+        plugin.displayMessage(player, message);
     }
 
     private void playSwitchEffects(Player player) {
-        String soundName = BanMace.getInstance().getConfig().getString("additional_effects.mode_switch_sound", "BLOCK_NOTE_BLOCK_PLING");
-        String particleName = BanMace.getInstance().getConfig().getString("additional_effects.mode_switch_particle", "SPELL_WITCH");
+        BanMace plugin = BanMace.getInstance();
+        String soundName = plugin.getConfig().getString("additional_effects.mode_switch_sound", "block.note_block.pling");
+        String particleName = plugin.getConfig().getString("additional_effects.mode_switch_particle", "witch");
 
-        try {
-            Sound sound = Sound.valueOf(soundName.toUpperCase());
-            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
-        } catch (IllegalArgumentException e) {
-            BanMace.getInstance().getLogger().warning("Invalid sound: " + soundName);
+        Sound sound = plugin.getSoundFromString(soundName);
+        if (sound != null) {
+            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.5f);
+        } else {
+            plugin.getLogger().warning("Invalid mode_switch_sound in config: " + soundName);
         }
 
-        try {
-            Particle particle = Particle.valueOf(particleName.toUpperCase());
+        Particle particle = plugin.getParticleFromString(particleName);
+        if (particle != null) {
             player.getWorld().spawnParticle(particle, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);
-        } catch (IllegalArgumentException e) {
-            BanMace.getInstance().getLogger().warning("Invalid particle: " + particleName);
+        } else {
+            plugin.getLogger().warning("Invalid mode_switch_particle in config: " + particleName);
         }
     }
 }

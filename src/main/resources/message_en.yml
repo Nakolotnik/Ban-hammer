@@ -1,35 +1,202 @@
 messages:
-  mode_switched: "§aMode switched to §c%mode%."
-  no_permission: "You don't have permission to use this."
-  item_removed_no_permission: "§cYou are not allowed to use this item, and it has been removed."
-  mode_spawn: "SPAWN"
-  mode_bed: "BED"
-  mode_ban: "BAN"
-  mode_kick: "KICK"
+  no_permission: "§cYou don't have permission to use this."
+  must_be_player: "§cThis command can only be used by players."
+  invalid_usage: "§cInvalid usage. Use: %usage%"
   mace_given: "§aYou have been given the Ban Mace!"
-  must_be_player: "This command can only be used by players."
-  invalid_language: "§cInvalid language. Available languages: %languages%."
-  language_set: "§aLanguage has been set to §6§l%language%."
-  language_usage: "Usage: /bm-setlanguage [en|ru]"
-  invalid_usage: "§cInvalid usage. Use %usage%."
-  invalid_mode: "§cInvalid mode. Valid modes are: chat, actionbar, title."
-  view_mode_changed: "§aMessage display mode changed to %mode%."
-  freeze_applied: "§aYou applied freeze to %target%."
-  freeze_received: "§aYou have been frozen!"
-  tool_switched: "§aSwitched tool. Current mode: §c%mode%."
-  player_teleported_spawn: "§a%player% has been teleported to spawn!"
-  no_bed_spawn: "§c%player% does not have a bed. Teleporting to spawn."
+  cannot_use_on_player: "§cYou cannot use the BanMace on {player}."
+  item_removed_no_permission: "§cYou are not allowed to use this item, and it has been removed."
+  mode_switched: "§aMode switched to: §e{mode}"
+  mode_spawn: "Spawn Teleport"
+  mode_bed: "Bed Teleport"
+  mode_ban: "Ban"
+  mode_kick: "Kick"
+  mode_freeze: "Freeze"
+  mode_balloon: "Balloon"
+  mode_teleport_to: "Coordinate Teleport"
+  player_teleported_spawn: "§a{player} has been teleported to spawn!"
   teleported_to_spawn: "§aYou have been teleported to spawn."
+  no_bed_spawn: "§c{player} does not have a bed. Teleporting to spawn."
   bed_teleport: "§aYou have been teleported to your bed."
-  teleported_to_bed: "§aYou teleported %player% to their bed."
-  ban_applied: "§c%player% has been banned for %duration%."
-  banned_message: "§aYou have been banned for %duration%."
-  ban_reason: "Banned by Ban Mace"
-  teleported_to_coordinates: "§aTeleported to coordinates: X=%x%, Y=%y%, Z=%z%."
+  teleported_to_bed: "§aYou teleported {player} to their bed."
+  ban_applied: "§a✓ Player {player} has been banned for {duration}."
+  banned_message: "§cYou have been banned.\nReason: {reason}\nDuration: {duration}"
+  ban_reason: "Banned by an administrator."
+  kick_applied: "§a✓ Player {player} has been kicked."
+  kick_reason: "Kicked by an administrator."
+  freeze_applied: "§bYou have frozen {target} for 20 seconds."
+  freeze_received: "§bYou have been frozen!"
+  balloon_applied: "§dYou sent {target} flying with balloons!"
+  balloon_received: "§dYou're flying away on balloons!"
+  teleported_to_coordinates: "§aTeleported {player} to coordinates: X={x}, Y={y}, Z={z}."
+  coordinates_not_set: "§cCoordinates are not set in this mace. Use /bm-tpcoordinates <x> <y> <z>."
+  invalid_coordinates: "§cThe coordinates in this mace's lore are invalid."
+  coordinates_set: "§aCoordinates (X:{x} Y:{y} Z:{z}) have been set in your mace."
+  invalid_language: "§cInvalid language. Available: %languages%."
+  language_set: "§aLanguage set to: §e{language}."
+  language_usage: "Usage: /bm-setlanguage [en|ru]"
+  invalid_mode: "§cInvalid mode. Valid modes are: chat, actionbar, title."
+  view_mode_changed: "§aMessage display mode changed to: §e{mode}."
+  not_holding_mace: "§cYou must be holding the BanMace to set coordinates."
+  unknown_action: "§c❌ Unknown action: {action}"
+  unknown_input_type: "§c❌ Unknown input type: {type}"
+  no_languages_available: "§c❌ No languages available!"
   command_help: |
     §a------ BanMace Help ------
-    §e/bm-give §7- Obtain the Ban Mace item.
-    §e/bm-setlanguage <language> §7- Change the plugin language. (e.g., en, ru, de, ua)
-    §e/bm-changeview <chat|actionbar|title> §7- Change message display mode.
-    §e/bm-tpcoordinates <x> <y> <z> §7- Set coordinates in Ban Mace and teleport target.
+    §e/bm-give §7- Obtain the Ban Mace.
+    §e/bm-settings §7- Open the settings GUI.
+    §e/bm-setlanguage <lang> §7- Change the plugin language.
+    §e/bm-changeview <mode> §7- Change message display mode.
+    §e/bm-tpcoordinates <x> <y> <z> §7- Set coordinates in your mace.
     §e/bm-help §7- Show this help message.
+  lore:
+    spawn:
+      - '§7Mode: Spawn Teleport'
+      - '§fTeleports the target to the'
+      - '§fworld''s spawn point.'
+    bed:
+      - '§7Mode: Bed Teleport'
+      - '§fTeleports the target to their'
+      - '§fpersonal bed spawn.'
+    ban:
+      - '§7Mode: Ban'
+      - '§cInstantly bans the target'
+      - '§cfrom the server.'
+    kick:
+      - '§7Mode: Kick'
+      - '§6Instantly kicks the target'
+      - '§6from the server.'
+    freeze:
+      - '§7Mode: Freeze'
+      - '§bImmobilizes the target'
+      - '§bfor a short duration.'
+    teleport_to:
+      - '§7Mode: Coordinate Teleport'
+      - '§dTeleports the target to the'
+      - '§dcoordinates stored in the mace.'
+    balloon:
+      - '§7Mode: Balloon'
+      - '§dAttaches balloons to the target,'
+      - '§dsending them into the sky.'
+  gui:
+    title:
+      main: "§8▪ §6§lBanMace Settings §8▪"
+      particle: "§8▪ §d§lParticle Selection §8▪"
+      sound: "§8▪ §b§lSound Selection §8▪"
+      item: "§8▪ §c§lItem Selection §8▪"
+      confirm: "§8▪ §e§lConfirm Action §8▪"
+    status:
+      enabled: "§a✓ Enabled"
+      disabled: "§c✗ Disabled"
+    webhook:
+      configured: "§a✓ Configured"
+      not_configured: "§c❌ Not configured"
+    main:
+      lore:
+        current: "§7Current: §e{value}"
+        status: "§7Status: {status}"
+        particle: "§7Particle: §e{value}"
+        sound: "§7Sound: §e{value}"
+        webhook: "§7Webhook: {status}"
+        click_to_cycle: "§f▶ Click to cycle"
+        click_to_toggle: "§f▶ Click to toggle"
+        click_to_open: "§f▶ Click to open"
+        click_to_browse: "§f▶ Click to browse"
+        right_click_preview: "§8Right-click to preview"
+        click_to_configure: "§f▶ Click to configure"
+        click_to_close: "§f▶ Click to close"
+      language:
+        title: "§a§l⚙ Language Settings"
+        lore_1: "§8┌─────────────────────┐"
+        lore_available_title: "§8│ §7Available languages §8│"
+        lore_languages_format: "§8│ {languages} §8│"
+        lore_4: "§8└─────────────────────┘"
+      display_mode:
+        title: "§a§l📝 Display Mode"
+        lore_1: "§8┌─────────────────────┐"
+        lore_2: "§8│ §7CHAT §8- §7Normal chat §8│"
+        lore_3: "§8│ §7ACTIONBAR §8- §7Above hotbar §8│"
+        lore_4: "§8│ §7TITLE §8- §7Screen center §8│"
+        lore_5: "§8└─────────────────────┘"
+      whitelist:
+        title: "§a§l🛡 Whitelist System"
+        lore_1: "§7When enabled, only whitelisted"
+        lore_2: "§7players can use the BanMace."
+      update_checker:
+        title: "§a§l🔄 Update Checker"
+        lore_1: "§7Automatically checks for plugin"
+        lore_2: "§7updates on server startup."
+      mace_item:
+        title: "§c§l🔨 Mace Item"
+        lore_1: "§7Choose what item represents"
+        lore_2: "§7your BanMace in-game."
+      teleport_effects:
+        title: "§d§l✨ Teleport Effects"
+        lore_1: "§7Visual effects that play when"
+        lore_2: "§7a player is teleported."
+      sound_effects:
+        title: "§b§l🔊 Sound Effects"
+        lore_1: "§7Audio feedback for teleportation"
+        lore_2: "§7and other plugin actions."
+      discord_integration:
+        title: "§9§l📋 Discord Integration"
+        lore_1: "§7Connect your server to Discord"
+        lore_2: "§7for advanced logging features."
+      discord_logging:
+        title: "§9§l📤 Discord Logging"
+        lore_1: "§7Send ban events and logs"
+        lore_2: "§7directly to Discord channel."
+      plugin_info:
+        title: "§e§l📊 Plugin Information"
+        lore_version: "§7Version: §f{value}"
+        lore_authors: "§7Authors: §f{value}"
+        lore_description: "§7Description: §f{value}"
+        lore_details: "§8Plugin statistics and details"
+      close:
+        title: "§c§l❌ Close Menu"
+        lore_1: "§7Thanks for using BanMace!"
+    message:
+      settings_saved: "§a§l✓ §aSettings saved! Thanks for using BanMace."
+      preview_particle: "§d✨ Previewing particle: §e{particle}"
+      preview_sound: "§b🔊 Previewing sound: §e{sound}"
+      operation_cancelled: "§c❌ Operation cancelled."
+      language_changed: "§a§l✓ §aLanguage changed to: §e{language}"
+      display_mode_changed: "§a§l✓ §aMessage display mode changed to: §e{mode}"
+      setting_toggled: "§a§l✓ §a{setting} is now {status}"
+      webhook_not_set_warning: "§e⚠ Warning: Discord logging enabled but webhook URL not configured!"
+      particle_set: "§a§l✓ §aTeleport particle set to: §e{particle}"
+      sound_set: "§a§l✓ §aTeleport sound set to: §e{sound}"
+      item_set: "§a§l✓ §aMace item set to: §e{item}"
+      webhook_success: "§a§l✓ §aDiscord Webhook URL configured successfully!"
+      webhook_url_display: "§7URL: §8{url}"
+      webhook_invalid_format: "§c❌ Invalid webhook URL format! Please check the URL structure."
+      webhook_invalid_url: "§c❌ Invalid Webhook URL!\n§7Must start with: §bhttps://discord.com/api/webhooks/\n§7Example: §8https://discord.com/api/webhooks/123456789/abcdef..."
+      preview_failed: "§cCould not preview particle: {particle}"
+      item_already_set: "§cThis item is already selected as the BanMace."
+      mace_updated: "§aYour BanMace has been updated to the new appearance!"
+      maces_updated_globally: "§aSuccessfully updated {count} BanMaces across the server."
+      example_actionbar: "§e§lExample: §7This is how messages will appear!"
+      example_title_main: "§e§lExample"
+      example_title_sub: "§7This is how messages will appear!"
+      example_chat: "§e§lExample: §7This is how messages will appear!"
+    prompt:
+      webhook: "§e§l✏ Discord Webhook Configuration\n§7Please paste your Discord Webhook URL in chat.\n§7Format: §bhttps://discord.com/api/webhooks/...\n§7Type '§ccancel§7' to abort this operation."
+    confirm:
+      title: "§e§l⚠ Confirm Action"
+      action: "§7Action: §f{action}"
+      question: "§7Are you sure you want to proceed?"
+      warning: "§7This action cannot be undone."
+      choose: "§aChoose an option below:"
+      button_yes_title: "§a§l✓ Yes, Confirm"
+      button_yes_lore: "§7Click to execute: §f{action}"
+      button_no_title: "§c§l✗ No, Cancel"
+      button_no_lore: "§7Click to cancel the operation"
+    selection:
+      currently_selected: "§a§lCurrently selected"
+      click_to_select: "§7Left-click to select"
+      page_prev: "§a§l◀ Previous Page"
+      page_next: "§a§l▶ Next Page"
+      page_info_title: "§e§lPage Information"
+      page_info_current: "§7Current Page: §f{current}"
+      page_info_total: "§7Total Pages: §f{total}"
+      page_info_items: "§7Total Items: §f{items}"
+      back_button: "§c§l↩ Back to Main Menu"

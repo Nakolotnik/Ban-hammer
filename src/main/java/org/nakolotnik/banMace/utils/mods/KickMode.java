@@ -7,32 +7,41 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.nakolotnik.banMace.BanMace;
 import org.nakolotnik.banMace.ModeHandler;
 
+import java.util.Map;
+
 public class KickMode implements ModeHandler, Listener {
 
     @Override
     public void execute(Player damager, Player target) {
-        String reason = "Kicked by Ban Mace";
+        BanMace plugin = BanMace.getInstance();
+
+        String reason = plugin.getMessage("kick_reason");
         target.kickPlayer(reason);
 
-        damager.sendMessage(target.getName() + " has been kicked.");
+        damager.sendMessage(plugin.getMessage("kick_applied", Map.of("player", target.getName())));
+
+        String actionDetails = "Reason: " + reason;
+        plugin.getLoggerService().logMaceAction(damager, target, getModeName(), actionDetails);
     }
 
     @Override
     public String getModeName() {
-        return "KICK";
+        return "Kick";
     }
+
     @EventHandler
     public void onPlayerHit(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-            Player damager = (Player) event.getDamager();
-            Player target = (Player) event.getEntity();
-            if (!BanMace.isHoldingBanMace(damager)) {
+        if (!(event.getDamager() instanceof Player damager) || !(event.getEntity() instanceof Player target)) {
+            return;
+        }
+
+        if (BanMace.isHoldingBanMace(damager) && BanMace.getCurrentMode() instanceof KickMode) {
+            if (target.hasPermission("banmace.bypass")) {
+                damager.sendMessage(BanMace.getInstance().getMessage("cannot_use_on_player", Map.of("player", target.getName())));
                 return;
             }
-            if (BanMace.getCurrentMode() instanceof KickMode) {
-                execute(damager, target);
-                event.setCancelled(true);
-            }
+            execute(damager, target);
+            event.setCancelled(true);
         }
     }
 }

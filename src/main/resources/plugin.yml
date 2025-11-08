@@ -1,7 +1,7 @@
 name: BanMace
-version: '1.6'
+version: '1.12.5'
 main: org.nakolotnik.banMace.BanMace
-api-version: '1.20'
+api-version: '1.21'
 
 commands:
   bm-setlanguage:
@@ -27,8 +27,49 @@ commands:
     usage: /bm-help
     permission: banmace.bm-help
     permission-message: You do not have permission to use this command.
+  bm-settings:
+    description: Opens the plugin settings GUI.
+    usage: /bm-settings
+    permission: banmace.settings
+    permission-message: You do not have permission to use this command.
 
 permissions:
+  banmace.bypass:
+    description: Grants immunity from all BanMace effects.
+    default: op
+
+  banmace.use:
+    description: Allows using the BanMace and its basic commands.
+    default: op
+
+  banmace.admin:
+    description: Allows access to administrative commands like /bm-settings.
+    default: op
+    children:
+      banmace.use: true
+
+  banmace.mode.ban:
+    description: Allows using the Ban mode.
+    default: op
+  banmace.mode.kick:
+    description: Allows using the Kick mode.
+    default: op
+  banmace.mode.freeze:
+    description: Allows using the Freeze mode.
+    default: op
+  banmace.mode.ballon:
+    description: Allows using the Ballons mode.
+    default: op
+  banmace.mode.spawn:
+    description: Allows using the Spawn Teleport mode.
+    default: op
+  banmace.mode.bed:
+    description: Allows using the Bed Teleport mode.
+    default: op
+  banmace.mode.teleport:
+    description: Allows using the Coordinate Teleport mode.
+    default: op
+
   banmace.bm-setlanguage:
     description: Allows changing the plugin language.
     default: op

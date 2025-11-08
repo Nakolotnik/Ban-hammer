@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.nakolotnik.banMace.BanMace;
 import org.nakolotnik.banMace.ModeHandler;
 
@@ -16,108 +15,108 @@ public class BanMode implements ModeHandler, Listener {
 
     @Override
     public void execute(Player damager, Player target) {
-        String defaultDuration = BanMace.getInstance().getConfig().getString("ban_mode.default_duration", "1h");
-        long banDuration = parseDuration(defaultDuration);
+        BanMace plugin = BanMace.getInstance();
 
-        // Бан игрока
+        String defaultDuration = plugin.getConfig().getString("ban_mode.default_duration", "1h");
+        long banDurationSeconds = parseDuration(defaultDuration);
+
         String targetName = target.getName();
         String damagerName = damager.getName();
-        Date expiryDate = new Date(System.currentTimeMillis() + (banDuration * 1000));
+        String formattedDuration = formatDuration(banDurationSeconds);
+
+        Date expiryDate = (banDurationSeconds > 0) ? new Date(System.currentTimeMillis() + (banDurationSeconds * 1000L)) : null;
 
         Bukkit.getBanList(org.bukkit.BanList.Type.NAME).addBan(
                 targetName,
-                BanMace.getInstance().getMessage("ban_reason"),
+                plugin.getMessage("ban_reason"),
                 expiryDate,
                 damagerName
         );
 
-        target.kickPlayer(BanMace.getInstance().getMessage("banned_message", Map.of("duration", formatDuration(banDuration))));
-        damager.sendMessage(BanMace.getInstance().getMessage("ban_applied", Map.of(
+        target.kickPlayer(plugin.getMessage("banned_message", Map.of("duration", formattedDuration)));
+
+        damager.sendMessage(plugin.getMessage("ban_applied", Map.of(
                 "player", targetName,
-                "duration", formatDuration(banDuration)
+                "duration", formattedDuration
         )));
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Bukkit.getBanList(org.bukkit.BanList.Type.NAME).pardon(targetName);
-            }
-        }.runTaskLater(BanMace.getInstance(), banDuration * 20);
+        String actionDetails = "Duration: " + formattedDuration;
+        plugin.getLoggerService().logMaceAction(damager, target, getModeName(), actionDetails);
     }
-
-
 
     @Override
     public String getModeName() {
-        return "BAN";
+        return "Ban";
     }
 
     @EventHandler
     public void onPlayerHit(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-            Player damager = (Player) event.getDamager();
-            Player target = (Player) event.getEntity();
+        if (!(event.getDamager() instanceof Player damager) || !(event.getEntity() instanceof Player target)) {
+            return;
+        }
 
-            if (!BanMace.isHoldingBanMace(damager)) {
+        if (BanMace.isHoldingBanMace(damager) && BanMace.getCurrentMode() instanceof BanMode) {
+            if (target.hasPermission("banmace.bypass")) {
+                damager.sendMessage(BanMace.getInstance().getMessage("cannot_use_on_player", Map.of("player", target.getName())));
                 return;
             }
-
-            if (BanMace.getCurrentMode() instanceof BanMode) {
-                execute(damager, target);
-                event.setCancelled(true);
-            }
+            execute(damager, target);
+            event.setCancelled(true);
         }
     }
 
     private long parseDuration(String duration) {
         if (duration == null || duration.isEmpty()) {
-            return 60;
+            return 3600;
         }
 
-        Map<Character, Long> timeUnits = Map.of(
-                's', 1L,
-                'm', 60L,
-                'h', 3600L,
-                'd', 86400L,
-                'w', 604800L,
-                'y', 31536000L
-        );
+        if (duration.equalsIgnoreCase("permanent") || duration.equalsIgnoreCase("perm")) {
+            return -1;
+        }
 
         try {
-            char lastChar = duration.charAt(duration.length() - 1);
-            if (Character.isDigit(lastChar)) {
-                return Long.parseLong(duration);
-            }
+            long value = Long.parseLong(duration.substring(0, duration.length() - 1));
+            char unit = duration.toLowerCase().charAt(duration.length() - 1);
 
-            Long multiplier = timeUnits.get(lastChar);
-            if (multiplier != null) {
-                String numericPart = duration.substring(0, duration.length() - 1);
-                return Long.parseLong(numericPart) * multiplier;
-            }
-
-            throw new IllegalArgumentException("Unknown time unit: " + lastChar);
-        } catch (IllegalArgumentException e) {
-            Bukkit.getLogger().warning("[BanMace] Invalid duration format: " + duration + ". Defaulting to 60 seconds.");
-            return 60;
+            return switch (unit) {
+                case 's' -> value;
+                case 'm' -> value * 60;
+                case 'h' -> value * 3600;
+                case 'd' -> value * 86400;
+                case 'w' -> value * 604800;
+                case 'y' -> value * 31536000;
+                default -> 3600;
+            };
+        } catch (Exception e) {
+            BanMace.getInstance().getLogger().warning("[BanMace] Invalid duration format in config: '" + duration + "'. Defaulting to 1 hour.");
+            return 3600;
         }
     }
 
     private String formatDuration(long seconds) {
-        Map<String, Long> timeUnits = Map.of(
-                "year(s)", 31536000L,
-                "week(s)", 604800L,
-                "day(s)", 86400L,
-                "hour(s)", 3600L,
-                "minute(s)", 60L
-        );
-
-        for (Map.Entry<String, Long> entry : timeUnits.entrySet()) {
-            long unitValue = entry.getValue();
-            if (seconds >= unitValue) {
-                return (seconds / unitValue) + " " + entry.getKey();
-            }
+        if (seconds <= 0) {
+            return "Permanent";
         }
 
-        return seconds + " second(s)";
+        long years = seconds / 31536000L;
+        seconds %= 31536000L;
+        long weeks = seconds / 604800L;
+        seconds %= 604800L;
+        long days = seconds / 86400L;
+        seconds %= 86400L;
+        long hours = seconds / 3600L;
+        seconds %= 3600L;
+        long minutes = seconds / 60L;
+        long remainingSeconds = seconds % 60L;
+
+        StringBuilder sb = new StringBuilder();
+        if (years > 0) sb.append(years).append(" year(s) ");
+        if (weeks > 0) sb.append(weeks).append(" week(s) ");
+        if (days > 0) sb.append(days).append(" day(s) ");
+        if (hours > 0) sb.append(hours).append(" hour(s) ");
+        if (minutes > 0) sb.append(minutes).append(" minute(s) ");
+        if (remainingSeconds > 0) sb.append(remainingSeconds).append(" second(s) ");
+
+        return sb.toString().trim();
     }
 }

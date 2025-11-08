@@ -11,6 +11,7 @@ public class LanguageManager {
     private final BanMace plugin;
     private final Map<String, String> messages;
     private String currentLanguage;
+    private YamlConfiguration languageConfig;
 
     public LanguageManager(BanMace plugin) {
         this.plugin = plugin;
@@ -27,35 +28,43 @@ public class LanguageManager {
             languageFile = new File(plugin.getDataFolder(), "message_en.yml");
         }
 
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(languageFile);
+        this.languageConfig = YamlConfiguration.loadConfiguration(languageFile);
         messages.clear();
 
-        if (config.getConfigurationSection("messages") == null) {
+        if (languageConfig.getConfigurationSection("messages") == null) {
             plugin.getLogger().severe("Failed to load messages from " + languageFile.getName());
             return;
         }
 
-        for (String key : config.getConfigurationSection("messages").getKeys(false)) {
-            messages.put(key, config.getString("messages." + key));
+        for (String key : languageConfig.getConfigurationSection("messages").getKeys(true)) {
+            if (languageConfig.isString("messages." + key)) {
+                messages.put("messages." + key, languageConfig.getString("messages." + key));
+            }
         }
-
-        plugin.getLogger().info("Loaded " + messages.size() + " messages for language: " + language);
+        plugin.getLogger().info("Loaded " + messages.size() + " string messages for language: " + language);
     }
 
     public String getMessage(String key, Map<String, String> placeholders) {
-        String message = messages.getOrDefault(key, "Message not found: " + key);
+        String message = messages.getOrDefault("messages." + key, key);
 
         if (placeholders != null) {
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                message = message.replace("{" + entry.getKey() + "}", entry.getValue());
                 message = message.replace("%" + entry.getKey() + "%", entry.getValue());
             }
         }
-
         return message;
     }
 
     public String getMessage(String key) {
         return getMessage(key, null);
+    }
+
+    public List<String> getMessageList(String key) {
+        if (languageConfig != null) {
+            return languageConfig.getStringList("messages." + key);
+        }
+        return Collections.emptyList();
     }
 
     public List<String> getAvailableLanguages() {
@@ -77,7 +86,6 @@ public class LanguageManager {
     public String getAvailableLanguagesString() {
         return String.join(", ", getAvailableLanguages());
     }
-
 
     public void checkAndLoadLanguageFiles() {
         File dataFolder = plugin.getDataFolder();
